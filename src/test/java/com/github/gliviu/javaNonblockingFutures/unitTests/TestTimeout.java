@@ -1,11 +1,12 @@
 package com.github.gliviu.javaNonblockingFutures.unitTests;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.github.gliviu.javaNonblockingFutures.Future;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,7 +29,7 @@ public class TestTimeout extends BaseUnitTests {
                 TestUtils.sleep(100);
                 return "s1";
             }, executor));
-            futures.add(Future.timeout(Duration.ofMillis(200)));
+            futures.add(Future.timeout(200, TimeUnit.MILLISECONDS));
             Future.first(futures).onComplete((fail, result) -> {
                 if (fail != null && fail instanceof TimeoutException) {
                     output.append("timeout");
@@ -56,7 +57,7 @@ public class TestTimeout extends BaseUnitTests {
                 TestUtils.sleep(200);
                 return "s1";
             }, executor));
-            futures.add(Future.timeout(Duration.ofMillis(100)));
+            futures.add(Future.timeout(100, TimeUnit.MILLISECONDS));
             Future.first(futures).onComplete((fail, result) -> {
                 if (fail != null && fail instanceof TimeoutException) {
                     output.append("timeout");
@@ -84,7 +85,7 @@ public class TestTimeout extends BaseUnitTests {
                 TestUtils.sleep(200);
                 throw new RuntimeException("f1");
             }, executor));
-            futures.add(Future.timeout(Duration.ofMillis(100)));
+            futures.add(Future.timeout(100, TimeUnit.MILLISECONDS));
             Future.first(futures).onComplete((fail, result) -> {
                 if (fail != null && fail instanceof TimeoutException) {
                     output.append("timeout");
@@ -112,7 +113,7 @@ public class TestTimeout extends BaseUnitTests {
                 TestUtils.sleep(100);
                 throw new RuntimeException("f1");
             }, executor));
-            futures.add(Future.timeout(Duration.ofMillis(200)));
+            futures.add(Future.timeout(200, TimeUnit.MILLISECONDS));
             Future.first(futures).onComplete((fail, result) -> {
                 if (fail != null && fail instanceof TimeoutException) {
                     output.append("timeout");

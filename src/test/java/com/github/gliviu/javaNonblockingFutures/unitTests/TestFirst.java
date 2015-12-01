@@ -65,9 +65,7 @@ public class TestFirst extends BaseUnitTests {
     public void test2() {
         if (testPhase()) {
             // Test
-            List<Future<String>> futures = new ArrayList<>();
-            futures.add(Future.successful("s1"));
-            Future.first(futures).onComplete((fail, result) -> {
+        	Future.first(Future.successful("s1")).onComplete((fail, result) -> {
                 if (fail != null) {
                     output.append(fail.getMessage());
                 } else {
@@ -87,9 +85,7 @@ public class TestFirst extends BaseUnitTests {
     public void test3() {
         if (testPhase()) {
             // Test
-            List<Future<String>> futures = new ArrayList<>();
-            futures.add(Future.failed(new RuntimeException("f1")));
-            Future.first(futures).onComplete((fail, result) -> {
+        	Future.first(Future.failed(new RuntimeException("f1"))).onComplete((fail, result) -> {
                 if (fail != null) {
                     output.append(fail.getMessage());
                 } else {
@@ -109,16 +105,15 @@ public class TestFirst extends BaseUnitTests {
     public void test4() {
         if (testPhase()) {
             // Test
-            List<Future<String>> futures = new ArrayList<>();
-            futures.add(Future.future(() -> {
+            Future<String> future1 = Future.future(() -> {
                 TestUtils.sleep(100);
                 return "s1";
-            }, executor));
-            futures.add(Future.future(() -> {
+            }, executor);;
+            Future<String> future2 = Future.future(() -> {
                 TestUtils.sleep(200);
                 throw new RuntimeException("f1");
-            }, executor));
-            Future.first(futures).onComplete((fail, result) -> {
+            }, executor);
+            Future.first(future1, future2).onComplete((fail, result) -> {
                 if (fail != null) {
                     output.append(fail.getMessage());
                 } else {
@@ -138,16 +133,15 @@ public class TestFirst extends BaseUnitTests {
     public void test5() {
         if (testPhase()) {
             // Test
-            List<Future<String>> futures = new ArrayList<>();
-            futures.add(Future.future(() -> {
+            Future<String> future1 = Future.future(() -> {
                 TestUtils.sleep(200);
                 return "s1";
-            }, executor));
-            futures.add(Future.future(() -> {
+            }, executor);
+            Future<String> future2 = Future.future(() -> {
                 TestUtils.sleep(100);
                 throw new RuntimeException("f1");
-            }, executor));
-            Future.first(futures).onComplete((fail, result) -> {
+            }, executor);
+            Future.first(future1, future2).onComplete((fail, result) -> {
                 if (fail != null) {
                     output.append(fail.getMessage());
                 } else {
@@ -167,16 +161,15 @@ public class TestFirst extends BaseUnitTests {
     public void test6() {
         if (testPhase()) {
             // Test
-            List<Future<String>> futures = new ArrayList<>();
-            futures.add(Future.future(() -> {
+            Future<String> future1 = Future.future(() -> {
                 TestUtils.sleep(100);
                 throw new RuntimeException("f1");
-            }, executor));
-            futures.add(Future.future(() -> {
+            }, executor);
+            Future<String> future2 = Future.future(() -> {
                 TestUtils.sleep(200);
                 throw new RuntimeException("f2");
-            }, executor));
-            Future.first(futures).onComplete((fail, result) -> {
+            }, executor);
+            Future.first(future1, future2).onComplete((fail, result) -> {
                 if (fail != null) {
                     output.append(fail.getMessage());
                 } else {
@@ -196,7 +189,7 @@ public class TestFirst extends BaseUnitTests {
     public void test7() {
         if (testPhase()) {
             // Test
-            Future.first(new ArrayList<Future<String>>()).onComplete((fail, result) -> {
+        	Future.first().onComplete((fail, result) -> {
                 if (fail != null) {
                     output.append(fail.getMessage());
                 } else {

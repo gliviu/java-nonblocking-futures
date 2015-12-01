@@ -1,7 +1,7 @@
 package com.github.gliviu.javaNonblockingFutures;
 
-import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -14,6 +14,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import scala.collection.parallel.IterableSplitter;
 
 /**
  * Futures are objects that represent the results of asynchronous computations.
@@ -30,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <li>{@link #future(Callable, ExecutorService)}</li>
  * <li>{@link #successful(Object)}</li>
  * <li>{@link #failed(Throwable)}</li>
- * <li>{@link #timeout(Duration)}</li>
+ * <li>{@link #timeout(int, TimeUnit)}</li>
  * </ul>
  * <p>
  * Handlers are provided to process the result.
@@ -57,9 +59,9 @@ public class Future<V> {
     private static final int NOT_AVAILABLE = -1;
 
     final InternalFutureTask internalFuture;
-    private final ConcurrentLinkedQueue<Handler<V>> successHandlers = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<Handler<Throwable>> failureHandlers = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<CompleteHandler<Throwable, V>> completeHandlers = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Handler<V>> successHandlers = new ConcurrentLinkedQueue<Handler<V>>();
+    private final ConcurrentLinkedQueue<Handler<Throwable>> failureHandlers = new ConcurrentLinkedQueue<Handler<Throwable>>();
+    private final ConcurrentLinkedQueue<CompleteHandler<Throwable, V>> completeHandlers = new ConcurrentLinkedQueue<CompleteHandler<Throwable, V>>();
 
 
     /**
@@ -103,20 +105,20 @@ public class Future<V> {
                 try {
                     result = this.get();
                 } catch (final Throwable t) {
-                    failureHandlers.forEach(h -> {
-                        handleFailure(h, t);
-                    });
-                    completeHandlers.forEach(h -> {
-                        handleCompleteFailure(t, h);
-                    });
+                    for(Handler<Throwable> handler : failureHandlers){
+                        handleFailure(handler, t);
+                    }
+                    for(CompleteHandler<Throwable, V> handler : completeHandlers){
+                        handleCompleteFailure(t, handler);
+                    }
                     return;
                 }
-                successHandlers.forEach(h -> {
-                    handleSuccess(result, h);
-                });
-                completeHandlers.forEach(h -> {
-                    handleComplelteSuccess(result, h);
-                });
+                for(Handler<V> handler : successHandlers){
+                    handleSuccess(result, handler);
+                }
+                for(CompleteHandler<Throwable, V> handler : completeHandlers){
+                    handleComplelteSuccess(result, handler);
+                }
             }
         }
 
@@ -142,8 +144,11 @@ public class Future<V> {
      * Internal constructor used to create promises.
      */
     Future() {
-        internalFuture = new InternalFutureTask(() -> {
-            return null;
+        internalFuture = new InternalFutureTask(new Callable<V>() {
+            @Override
+            public V call() throws Exception {
+                return null;
+            }
         });
     }
 
@@ -162,7 +167,7 @@ public class Future<V> {
      * @param value success value.
      */
     public static <V> Future<V> successful(V value){
-        Future<V> future = new Future<>();
+        Future<V> future = new Future<V>();
         future.internalFuture.forceSuccess(value);
         return future;
     }
@@ -172,7 +177,7 @@ public class Future<V> {
      * @param t Failure.
      */
     public static <V> Future<V> failed(Throwable t){
-        Future<V> future = new Future<>();
+        Future<V> future = new Future<V>();
         future.internalFuture.forceFailure(t);
         return future;
     }
@@ -182,13 +187,17 @@ public class Future<V> {
      * @param timeout timeout duration.
      * @return the future.
      */
-    public static <V> Future<V> timeout(Duration timeout){
+    public static <V> Future<V> timeout(int timeout, TimeUnit unit){
         ScheduledExecutorService timeoutExecutor = Executors.newSingleThreadScheduledExecutor();
-        Future<V> promise = new Future<>();
-        timeoutExecutor.schedule(() ->{
-            promise.internalFuture.forceFailure(new TimeoutException());
-        }, timeout.toMillis(), TimeUnit.MILLISECONDS);
+        final Future<V> promise = new Future<V>();
+        timeoutExecutor.schedule(new Runnable() {
 
+            @Override
+            public void run() {
+                promise.internalFuture.forceFailure(new TimeoutException());
+            }
+        }, unit.toMillis(timeout), TimeUnit.MILLISECONDS);
+        
         timeoutExecutor.shutdown();
         return promise;
     }
@@ -200,18 +209,21 @@ public class Future<V> {
      * @param futures futures to be processed.
      */
     public static <T> Future<Iterable<T>> all(Iterable<Future<T>> futures) {
-        Future<Iterable<T>> promise = new Future<>();
+        final Future<Iterable<T>> promise = new Future<Iterable<T>>();
         final AtomicInteger futuresSize = new AtomicInteger(NOT_AVAILABLE);
-        List<T> results = Collections.synchronizedList(new ArrayList<>());
+        final List<T> results = Collections.synchronizedList(new ArrayList<T>());
         int i = 0;
         for (Future<T> future : futures) {
-            future.onComplete((fail, result) -> {
-                if (fail != null) {
-                    promise.tryFailure(fail);
-                } else {
-                    results.add(result);
-                    if (futuresSize.get() == results.size()) {
-                        promise.trySuccess(results);
+            future.onComplete(new CompleteHandler<Throwable, T>() {
+                @Override
+                public void handle(Throwable fail, T result) {
+                    if (fail != null) {
+                        promise.tryFailure(fail);
+                    } else {
+                        results.add(result);
+                        if (futuresSize.get() == results.size()) {
+                            promise.trySuccess(results);
+                        }
                     }
                 }
             });
@@ -224,6 +236,22 @@ public class Future<V> {
         return promise;
     }
 
+    /**
+     * Convenience method for {@link #all(Iterable)}.
+     */
+    @SafeVarargs
+    public static <T> Future<Iterable<T>> all(Future<T> ...futures) {
+        return all(Arrays.asList(futures));
+    }
+
+
+    /**
+     * Convenience method for {@link #first(Iterable)}.
+     */
+    @SafeVarargs
+    public static <T> Future<T> first(Future<T> ...futures) {
+        return first(Arrays.asList(futures));
+    }
 
     /**
      * Creates a new future holding result or failure of the first completed future.
@@ -231,20 +259,22 @@ public class Future<V> {
      * @param futures futures to be processed.
      */
     public static <T> Future<T> first(Iterable<Future<T>> futures) {
-        Future<T> promise = new Future<>();
+        final Future<T> promise = new Future<T>();
         for (Future<T> future : futures) {
-            future.onComplete((fail, result) -> {
-                if (fail != null) {
-                    promise.tryFailure(fail);
-                } else {
-                    promise.trySuccess(result);
+            future.onComplete(new CompleteHandler<Throwable, T>() {
+                @Override
+                public void handle(Throwable fail, T result) {
+                    if (fail != null) {
+                        promise.tryFailure(fail);
+                    } else {
+                        promise.trySuccess(result);
+                    }
                 }
             });
         }
         return promise;
     }
-
-
+    
     /**
      * Success handler.
      * @param handler Callback to be executed when this future completed successfully.
@@ -348,16 +378,22 @@ public class Future<V> {
      * @param <T> result type after applying 'mapper'.
      */
     public <T> Future<T> map(final Mapper<V, T> mapper) {
-        final Future<T> promise = new Future<>();
-        this.onSuccess(v -> {
-            try {
-                promise.internalFuture.forceSuccess(mapper.map(v));
-            } catch (Throwable t) {
-                promise.internalFuture.forceFailure(t);
+        final Future<T> promise = new Future<T>();
+        this.onSuccess(new Handler<V>() {
+            @Override
+            public void handle(V result) {
+                try {
+                    promise.internalFuture.forceSuccess(mapper.map(result));
+                } catch (Throwable t) {
+                    promise.internalFuture.forceFailure(t);
+                }
             }
         });
-        this.onFailure(t -> {
-            promise.internalFuture.forceFailure(t);
+        this.onFailure(new Handler<Throwable>() {
+            @Override
+            public void handle(Throwable fail) {
+                promise.internalFuture.forceFailure(fail);
+            }
         });
         return promise;
     }
@@ -369,22 +405,36 @@ public class Future<V> {
      * @param <T> result type after applying 'mapper'.
      */
     public <T> Future<T> flatMap(final Mapper<V, Future<T>> mapper) {
-        final Future<T> promise = new Future<>();
-        this.onSuccess(v -> {
-            try{
-                Future<T> future = mapper.map(v);
-                future.onSuccess(result -> {
-                    promise.internalFuture.forceSuccess(result);
-                });
-                future.onFailure(t -> {
-                    promise.internalFuture.forceFailure(t);
-                });
-            } catch(Exception e){
-                promise.internalFuture.forceFailure(e);
+        final Future<T> promise = new Future<T>();
+        this.onSuccess(new Handler<V>() {
+            
+            @Override
+            public void handle(V v) {
+                try{
+                    Future<T> future = mapper.map(v);
+                    future.onSuccess(new Handler<T>() {
+                        @Override
+                        public void handle(T result) {
+                            promise.internalFuture.forceSuccess(result);
+                        }
+                    });
+                    future.onFailure(new Handler<Throwable>() {
+                        @Override
+                        public void handle(Throwable fail) {
+                            promise.internalFuture.forceFailure(fail);
+                        }
+                    });
+                } catch(Exception e){
+                    promise.internalFuture.forceFailure(e);
+                }
             }
         });
-        this.onFailure(t -> {
-            promise.internalFuture.forceFailure(t);
+        
+        this.onFailure(new Handler<Throwable>() {
+            @Override
+            public void handle(Throwable fail) {
+                promise.internalFuture.forceFailure(fail);
+            }
         });
         return promise;
     }
@@ -404,17 +454,21 @@ public class Future<V> {
      * Handles any errors occurred in this future by mapping the failure to a new future.
      * @param recoverHandler handler for mapping operation.
      */
-    public Future<V> recover(RecoverHandler<V> recoverHandler){
-        Future<V> promise = new Future<>();
-        this.onComplete((t, result) -> {
-            if(t!=null){
-                try{
-                    promise.internalFuture.forceSuccess(recoverHandler.handle(t));
-                } catch(Throwable fail){
-                    promise.internalFuture.forceFailure(fail);
+    public Future<V> recover(final RecoverHandler<V> recoverHandler){
+        final Future<V> promise = new Future<V>();
+        this.onComplete(new CompleteHandler<Throwable, V>() {
+
+            @Override
+            public void handle(Throwable t, V result) {
+                if(t!=null){
+                    try{
+                        promise.internalFuture.forceSuccess(recoverHandler.handle(t));
+                    } catch(Throwable fail){
+                        promise.internalFuture.forceFailure(fail);
+                    }
+                } else{
+                    promise.internalFuture.forceSuccess(result);
                 }
-            } else{
-                promise.internalFuture.forceSuccess(result);
             }
         });
         return promise;

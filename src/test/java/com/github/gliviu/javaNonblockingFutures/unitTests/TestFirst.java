@@ -22,15 +22,15 @@ import com.github.gliviu.javaNonblockingFutures.unitTests.utils.TestUtils;
 public class TestFirst extends BaseUnitTests {
 
     @Test
-    @Configuration(repetitions = 100, threadPool = 1, sequential = true, sleep1 = "0", sleep2 = "50")
-    @Configuration(repetitions = 100, threadPool = 4, sequential = true, sleep1 = "0", sleep2 = "50")
-    @Configuration(repetitions = 100, threadPool = 8, sequential = true, sleep1 = "0", sleep2 = "50")
-    @Configuration(repetitions = 100, threadPool = 16, sequential = true, sleep1 = "0", sleep2 = "50")
+    @Configuration(repetitions = 25, threadPool = 1, sequential = true, sleep1 = "0", sleep2 = "500")
+    @Configuration(repetitions = 25, threadPool = 4, sequential = true, sleep1 = "0", sleep2 = "500")
+    @Configuration(repetitions = 25, threadPool = 8, sequential = true, sleep1 = "0", sleep2 = "500")
+    @Configuration(repetitions = 25, threadPool = 16, sequential = true, sleep1 = "0", sleep2 = "500")
     public void test1() {
         int futureNo = threadPool;
         if (testPhase()) {
             // Test
-            int granularity = 10; // Timeouts should be quite different. So we set them to be multiple of 10 milliseconds.
+            int granularity = 100; // Timeouts should be quite different. So we set them to be multiple of 'granularity' milliseconds.
             int[] timeouts = IntStream.range(0, futureNo).map(i -> {
                 int timeout = TestUtils.random(sleep1, sleep2);
                 timeout = timeout - timeout % granularity;

@@ -283,7 +283,7 @@ public class TestExceptionHandling extends BaseUnitTests {
 
 
                     future2.onComplete((failureL2, resultL2F) ->{
-                        Promise<String> promise3 = new Promise<>();
+                        Promise<String> promise3 = Promise.promise();
                         if(failureL2==null){
                             resultL2F.onComplete((failureL2_2, resultL2) -> {
                                 try{

@@ -5,12 +5,28 @@ package com.github.gliviu.javaNonblockingFutures;
  * <p>
  * However after creation it can be manually completed using {@link #success(Object)} or {@link #failure(Throwable)} while {@link Future}s are read-only.
  * <p>
- * Get access to underlying Future by using {@link Promise#future()}
+ * Create them with {@link #promise()}.
+ * <p>
+ * Get access to underlying Future using {@link Promise#future()}
  * @param <V> result type of this future.
+ * <p>
+ * @see <a href="https://github.com/gliviu/java-nonblocking-futures">https://github.com/gliviu/java-nonblocking-futures</a>.
  */
 public class Promise<V>{
     private Future<V> future = new Future<V>();
-
+    
+    /**
+     * Private constructor.
+     */
+    private Promise(){}
+    
+    /**
+     * Creates new promise.
+     */
+    public static <V> Promise<V> promise(){
+    	return new Promise<V>();
+    }
+    
     /**
      * Complete this promise with successful result.
      * See also {@link Promise#trySuccess(Object)}.

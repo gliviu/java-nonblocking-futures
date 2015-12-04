@@ -30,7 +30,7 @@ public class ConfigurationRule implements MethodRule {
 
                         unitTests.executor = Executors.newFixedThreadPool(unitTests.threadPool);
                         unitTests.output = new StringBuffer();
-                        unitTests.allTestStepsFinished = new Promise<Void>();
+                        unitTests.allTestStepsFinished = Promise.promise();
                         unitTests.step = new AtomicInteger(0);
                         unitTests.doneTests = new AtomicInteger(0);
                         unitTests.testPhase = new AtomicBoolean(true);
@@ -42,7 +42,7 @@ public class ConfigurationRule implements MethodRule {
                         for (int i = 0; i < unitTests.repetitions; i++) {
                             unitTests.step.incrementAndGet();
                             if(unitTests.sequential){
-                                unitTests.currentTestFinished = new Promise<Void>();
+                                unitTests.currentTestFinished = Promise.promise();
                             }
                             // Test phase.
                             base.evaluate();

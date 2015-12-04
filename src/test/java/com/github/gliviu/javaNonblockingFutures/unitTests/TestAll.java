@@ -29,7 +29,7 @@ public class TestAll extends BaseUnitTests {
                 return "s1";
             }, executor);
             Future<String> future2 = Future.future(()->{
-                TestUtils.sleep(200);
+                TestUtils.sleep(1000);
                 return "s2";
             }, executor);
 
@@ -58,7 +58,7 @@ public class TestAll extends BaseUnitTests {
                 return "s1";
             }, executor);
             Future<String> future2 = Future.future(()->{
-                TestUtils.sleep(200);
+                TestUtils.sleep(1000);
                 throw new RuntimeException("f2");
             }, executor);
 
@@ -83,7 +83,7 @@ public class TestAll extends BaseUnitTests {
         if(testPhase()){
             // Test
             Future<String> future1 = Future.future(()->{
-                TestUtils.sleep(200);
+                TestUtils.sleep(1000);
                 return "s1";
             }, executor);
             Future<String> future2 = Future.future(()->{
@@ -116,7 +116,7 @@ public class TestAll extends BaseUnitTests {
                 throw new RuntimeException("f1");
             }, executor);
             Future<String> future2 = Future.future(()->{
-                TestUtils.sleep(200);
+                TestUtils.sleep(1000);
                 return "s2";
             }, executor);
 
@@ -145,7 +145,7 @@ public class TestAll extends BaseUnitTests {
                 throw new RuntimeException("f1");
             }, executor);
             Future<String> future2 = Future.future(()->{
-                TestUtils.sleep(200);
+                TestUtils.sleep(1000);
                 throw new RuntimeException("f2");
             }, executor);
 
@@ -170,7 +170,7 @@ public class TestAll extends BaseUnitTests {
         if(testPhase()){
             // Test
             Future<String> future1 = Future.future(()->{
-                TestUtils.sleep(200);
+                TestUtils.sleep(1000);
                 throw new RuntimeException("f1");
             }, executor);
             Future<String> future2 = Future.future(()->{
@@ -203,7 +203,7 @@ public class TestAll extends BaseUnitTests {
                 throw new RuntimeException("f1");
             }, executor);
             Future<String> future2 = Future.future(()->{
-                TestUtils.sleep(200);
+                TestUtils.sleep(1000);
                 throw new RuntimeException("f2");
             }, executor);
 

@@ -15,7 +15,7 @@ public class TestPromise extends BaseUnitTests {
     @Configuration(repetitions=1, threadPool=1)
     public void test1(){
         if(testPhase()){
-            Promise<String> promise = new Promise<>();
+            Promise<String> promise = Promise.promise();
             promise.success("S1");
             output.append("success");
             promise.future().onSuccess(result -> {
@@ -31,7 +31,7 @@ public class TestPromise extends BaseUnitTests {
     @Configuration(repetitions=1, threadPool=1)
     public void test2(){
         if(testPhase()){
-            Promise<String> promise = new Promise<>();
+            Promise<String> promise = Promise.promise();
             try{
                 promise.success("S1");
                 promise.success("S2");
@@ -51,7 +51,7 @@ public class TestPromise extends BaseUnitTests {
     @Configuration(repetitions=1, threadPool=1)
     public void test3(){
         if(testPhase()){
-            Promise<String> promise = new Promise<>();
+            Promise<String> promise = Promise.promise();
             promise.failure(new RuntimeException("F1"));
             output.append("failure");
             promise.future().onFailure(fail -> {
@@ -67,7 +67,7 @@ public class TestPromise extends BaseUnitTests {
     @Configuration(repetitions=1, threadPool=1)
     public void test4(){
         if(testPhase()){
-            Promise<String> promise = new Promise<>();
+            Promise<String> promise = Promise.promise();
             try{
                 promise.failure(new RuntimeException("F1"));
                 promise.failure(new RuntimeException("F2"));
@@ -87,7 +87,7 @@ public class TestPromise extends BaseUnitTests {
     @Configuration(repetitions=1, threadPool=1)
     public void test6_1(){
         if(testPhase()){
-            Promise<String> promise = new Promise<>();
+            Promise<String> promise = Promise.promise();
             try{
                 promise.failure(new RuntimeException("F1"));
                 boolean succeeded = promise.tryFailure(new RuntimeException("F2"));
@@ -108,7 +108,7 @@ public class TestPromise extends BaseUnitTests {
     @Configuration(repetitions=1, threadPool=1)
     public void test6_2(){
         if(testPhase()){
-            Promise<String> promise = new Promise<>();
+            Promise<String> promise = Promise.promise();
             try{
                 boolean succeeded = promise.tryFailure(new RuntimeException("F1"));
                 output.append(succeeded);
@@ -128,7 +128,7 @@ public class TestPromise extends BaseUnitTests {
     @Configuration(repetitions=1, threadPool=1)
     public void test6_3(){
         if(testPhase()){
-            Promise<String> promise = new Promise<>();
+            Promise<String> promise = Promise.promise();
             try{
                 promise.success("S1");
                 boolean succeeded = promise.tryFailure(new RuntimeException("F2"));
@@ -149,7 +149,7 @@ public class TestPromise extends BaseUnitTests {
     @Configuration(repetitions=1, threadPool=1)
     public void test6_4(){
         if(testPhase()){
-            Promise<String> promise = new Promise<>();
+            Promise<String> promise = Promise.promise();
             try{
                 promise.success("S1");
                 boolean succeeded = promise.trySuccess("S2");
@@ -170,7 +170,7 @@ public class TestPromise extends BaseUnitTests {
     @Configuration(repetitions=1, threadPool=1)
     public void test6_5(){
         if(testPhase()){
-            Promise<String> promise = new Promise<>();
+            Promise<String> promise = Promise.promise();
             try{
                 boolean succeeded = promise.trySuccess("S1");
                 promise.trySuccess("S2");

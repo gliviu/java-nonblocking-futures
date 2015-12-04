@@ -15,8 +15,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import scala.collection.parallel.IterableSplitter;
-
 /**
  * Futures are objects that represent the results of asynchronous computations.
  * <p>
@@ -26,6 +24,8 @@ import scala.collection.parallel.IterableSplitter;
  * <li>fulfilled - operation completed successfully</li>
  * <li>rejected - operation failed</li>
  * </ul>
+ * <p>
+ * @see <a href="https://github.com/gliviu/java-nonblocking-futures">https://github.com/gliviu/java-nonblocking-futures</a>.
  * <p>
  * Create new futures using
  * <ul>
@@ -238,6 +238,7 @@ public class Future<V> {
 
     /**
      * Convenience method for {@link #all(Iterable)}.
+     * @param futures futures to be processed.
      */
     @SafeVarargs
     public static <T> Future<Iterable<T>> all(Future<T> ...futures) {
@@ -247,6 +248,7 @@ public class Future<V> {
 
     /**
      * Convenience method for {@link #first(Iterable)}.
+     * @param futures futures to be processed.
      */
     @SafeVarargs
     public static <T> Future<T> first(Future<T> ...futures) {

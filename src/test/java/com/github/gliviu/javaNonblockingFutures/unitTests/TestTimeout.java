@@ -29,7 +29,7 @@ public class TestTimeout extends BaseUnitTests {
                 TestUtils.sleep(100);
                 return "s1";
             }, executor));
-            futures.add(Future.timeout(200, TimeUnit.MILLISECONDS));
+            futures.add(Future.timeout(2000, TimeUnit.MILLISECONDS));
             Future.first(futures).onComplete((fail, result) -> {
                 if (fail != null && fail instanceof TimeoutException) {
                     output.append("timeout");
@@ -113,7 +113,7 @@ public class TestTimeout extends BaseUnitTests {
                 TestUtils.sleep(100);
                 throw new RuntimeException("f1");
             }, executor));
-            futures.add(Future.timeout(200, TimeUnit.MILLISECONDS));
+            futures.add(Future.timeout(2000, TimeUnit.MILLISECONDS));
             Future.first(futures).onComplete((fail, result) -> {
                 if (fail != null && fail instanceof TimeoutException) {
                     output.append("timeout");

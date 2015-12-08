@@ -43,6 +43,12 @@
 		</repository>
 	</distributionManagement>
 
+    <scm>
+        <connection>scm:git:git@github.com:gliviu/java-nonblocking-futures.git</connection>
+        <developerConnection>scm:git:git@github.com:gliviu/java-nonblocking-futures.git</developerConnection>
+        <url>git@github.com:gliviu/java-nonblocking-futures.git</url>
+    </scm>
+    
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
